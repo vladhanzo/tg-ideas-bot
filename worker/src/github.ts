@@ -100,6 +100,22 @@ export async function dispatchVoiceEvent(args: DispatchVoiceArgs): Promise<void>
   if (!res.ok) throw new Error(`GitHub dispatch error: ${res.status}`);
 }
 
+export async function listInboxFiles(args: {
+  token: string;
+  repo: string;
+  count: number;
+}): Promise<Array<{ name: string; path: string; html_url: string }>> {
+  const res = await fetch(`https://api.github.com/repos/${args.repo}/contents/Inbox`, {
+    headers: githubHeaders(args.token),
+  });
+  if (!res.ok) return [];
+  const data = await res.json<Array<{ name: string; path: string; html_url: string; type: string }>>();
+  return data
+    .filter((f) => f.type === 'file' && f.name.endsWith('.md'))
+    .sort((a, b) => b.name.localeCompare(a.name))
+    .slice(0, args.count);
+}
+
 export async function getRecentCommits(args: {
   token: string;
   repo: string;

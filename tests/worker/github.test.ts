@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createFile, fileExists, getFileSha, deleteFile, dispatchVoiceEvent, getRecentCommits } from '../../worker/src/github';
+import { createFile, fileExists, getFileSha, deleteFile, dispatchVoiceEvent, getRecentCommits, listInboxFiles } from '../../worker/src/github';
 
 const mockFetch = vi.fn();
 vi.stubGlobal('fetch', mockFetch);
@@ -84,6 +84,28 @@ describe('dispatchVoiceEvent', () => {
     const body = JSON.parse(opts.body as string);
     expect(body.event_type).toBe('voice_message');
     expect(body.client_payload.voice_file_id).toBe('voice_abc');
+  });
+});
+
+describe('listInboxFiles', () => {
+  it('returns files sorted newest first, filtered to .md', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => [
+        { name: '2026-05-18_0100_idea-b.md', path: 'Inbox/2026-05-18_0100_idea-b.md', html_url: 'https://gh/b', type: 'file' },
+        { name: '.gitkeep', path: 'Inbox/.gitkeep', html_url: 'https://gh/k', type: 'file' },
+        { name: '2026-05-17_0900_idea-a.md', path: 'Inbox/2026-05-17_0900_idea-a.md', html_url: 'https://gh/a', type: 'file' },
+      ],
+    });
+    const result = await listInboxFiles({ token: 'tok', repo: 'owner/repo', count: 5 });
+    expect(result).toHaveLength(2);
+    expect(result[0].name).toBe('2026-05-18_0100_idea-b.md');
+    expect(result[1].name).toBe('2026-05-17_0900_idea-a.md');
+  });
+
+  it('returns empty array on API error', async () => {
+    mockFetch.mockResolvedValue({ ok: false, status: 500 });
+    expect(await listInboxFiles({ token: 'tok', repo: 'owner/repo', count: 5 })).toEqual([]);
   });
 });
 

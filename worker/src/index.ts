@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { isAuthorizedRequest, isOwner } from './auth';
 import { buildFilename, toSlug } from './slug';
 import { buildNote } from './markdown';
-import { createFile, fileExists, getFileSha, deleteFile, dispatchVoiceEvent, getRecentCommits } from './github';
+import { createFile, fileExists, getFileSha, deleteFile, dispatchVoiceEvent, getRecentCommits, listInboxFiles } from './github';
 import { sendMessage, sendChatAction, answerCallbackQuery } from './telegram';
 
 export interface Env {
@@ -109,6 +109,25 @@ app.post('/webhook', async (c) => {
   // /start
   if (msg.text === '/start') {
     await sendMessage({ token, chatId, text: '👋 Отправь текст или голосовое — сохраню в Obsidian.\n\n/status — статистика' });
+    return c.json({ ok: true });
+  }
+
+  // /list
+  if (msg.text === '/list') {
+    const files = await listInboxFiles({ token: env.GITHUB_TOKEN, repo: env.GITHUB_REPO, count: 5 });
+    if (files.length === 0) {
+      await sendMessage({ token, chatId, text: '📭 Inbox пуст' });
+    } else {
+      await sendMessage({
+        token,
+        chatId,
+        text: `📋 Последние ${files.length} идей:`,
+        inlineKeyboard: files.map((f) => [
+          { text: f.name.replace('.md', ''), url: f.html_url },
+          { text: '❌', callback_data: `delete:${f.path}` },
+        ]),
+      });
+    }
     return c.json({ ok: true });
   }
 

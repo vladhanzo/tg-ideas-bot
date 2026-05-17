@@ -1,0 +1,58 @@
+name: transcribe
+
+on:
+  repository_dispatch:
+    types: [voice_message]
+
+jobs:
+  transcribe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout bot repo (for action scripts)
+        uses: actions/checkout@v4
+        with:
+          path: bot
+
+      - name: Checkout vault repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.VAULT_REPO }}
+          token: ${{ secrets.VAULT_REPO_TOKEN }}
+          path: vault
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache faster-whisper model
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: faster-whisper-small-v1
+
+      - name: Install Python dependencies
+        run: pip install -r bot/action/requirements.txt
+
+      - name: Transcribe and write note
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          VOICE_FILE_ID: ${{ github.event.client_payload.voice_file_id }}
+          CHAT_ID: ${{ github.event.client_payload.chat_id }}
+          MESSAGE_ID: ${{ github.event.client_payload.message_id }}
+          USER_TIMESTAMP: ${{ github.event.client_payload.user_timestamp }}
+          VAULT_DIR: vault
+          GITHUB_REPOSITORY: ${{ secrets.VAULT_REPO }}
+        run: python bot/action/transcribe.py
+
+      - name: Commit note to vault
+        if: env.NOTE_PATH != ''
+        run: |
+          cd vault
+          git config user.name "Idea Bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add Inbox/
+          git commit -m "idea (voice): ${{ env.NOTE_SLUG }}" || echo "Nothing to commit"
+          git push

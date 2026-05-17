@@ -1,0 +1,17 @@
+{
+  "name": "idea-bot-worker",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240718.0",
+    "hono": "^4.4.5",
+    "typescript": "^5.5.4",
+    "vitest": "^1.6.0"
+  }
+}

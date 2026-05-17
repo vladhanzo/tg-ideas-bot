@@ -1,0 +1,4 @@
+name = "idea-bot"
+main = "src/index.ts"
+compatibility_date = "2024-07-18"
+compatibility_flags = ["nodejs_compat"]

@@ -3,6 +3,7 @@ interface NoteOptions {
   type: 'text' | 'voice';
   messageId: number;
   createdAt: string;
+  linkedTo?: string;
 }
 
 export function buildNote(opts: NoteOptions): string {
@@ -19,7 +20,9 @@ export function buildNote(opts: NoteOptions): string {
     '---',
   ].join('\n');
 
+  const link = opts.linkedTo ? `\n\n> дополнение к [[${opts.linkedTo}]]` : '';
+
   return body
-    ? `${frontmatter}\n\n# ${title}\n\n${body}`
-    : `${frontmatter}\n\n# ${title}`;
+    ? `${frontmatter}\n\n# ${title}\n\n${body}${link}`
+    : `${frontmatter}\n\n# ${title}${link}`;
 }

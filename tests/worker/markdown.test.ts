@@ -67,4 +67,25 @@ describe('buildNote', () => {
     expect(note.startsWith('---')).toBe(true);
     expect(note).toContain('\n---\n');
   });
+
+  it('adds link to parent note when linkedTo is set', () => {
+    const note = buildNote({
+      text: 'Дополнение',
+      type: 'text',
+      messageId: 2,
+      createdAt: '2026-05-17T14:32:10+03:00',
+      linkedTo: '2026-05-18_0019_ya-vlad',
+    });
+    expect(note).toContain('[[2026-05-18_0019_ya-vlad]]');
+  });
+
+  it('does not add link when linkedTo is absent', () => {
+    const note = buildNote({
+      text: 'Обычная идея',
+      type: 'text',
+      messageId: 3,
+      createdAt: '2026-05-17T14:32:10+03:00',
+    });
+    expect(note).not.toContain('[[');
+  });
 });

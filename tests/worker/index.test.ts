@@ -115,6 +115,21 @@ describe('POST /webhook', () => {
     expect(callArgs.text).toContain('5');
   });
 
+  it('links to parent note when replying to bot message', async () => {
+    const replyUpdate = {
+      update_id: 7,
+      message: {
+        ...baseMsg,
+        text: 'дополнение к идее',
+        reply_to_message: { text: '✅ Сохранено: `2026-05-18_0019_ya-vlad.md`' },
+      },
+    };
+    await app.fetch(makeWebhookRequest(replyUpdate), ENV);
+    expect(createFile).toHaveBeenCalledOnce();
+    const content = (createFile as ReturnType<typeof vi.fn>).mock.calls[0][0].content;
+    expect(content).toContain('[[2026-05-18_0019_ya-vlad]]');
+  });
+
   it('handles delete callback query', async () => {
     const cbUpdate = {
       update_id: 6,

@@ -21,6 +21,7 @@ interface TelegramMessage {
   text?: string;
   voice?: { file_id: string; duration: number };
   date: number;
+  reply_to_message?: { text?: string };
 }
 
 interface TelegramCallbackQuery {
@@ -125,7 +126,8 @@ app.post('/webhook', async (c) => {
       const ts = moscowIso(msg.date);
       const basePath = buildFilename(msg.text, new Date(msg.date * 1000));
       const path = await uniquePath(basePath, env.GITHUB_TOKEN, env.GITHUB_REPO);
-      const content = buildNote({ text: msg.text, type: 'text', messageId: msg.message_id, createdAt: ts });
+      const linkedTo = msg.reply_to_message?.text?.match(/`([^`]+)\.md`/)?.[1];
+      const content = buildNote({ text: msg.text, type: 'text', messageId: msg.message_id, createdAt: ts, linkedTo });
       const slug = toSlug(msg.text);
       const { html_url } = await createFile({
         token: env.GITHUB_TOKEN,

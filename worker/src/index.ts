@@ -11,6 +11,7 @@ export interface Env {
   OWNER_TELEGRAM_ID: string;
   GITHUB_TOKEN: string;
   GITHUB_REPO: string;
+  GITHUB_BOT_REPO: string;
 }
 
 interface TelegramMessage {
@@ -78,6 +79,10 @@ app.post('/webhook', async (c) => {
     }
     if (cq.data?.startsWith('delete:')) {
       const path = cq.data.slice('delete:'.length);
+      if (!path.startsWith('Inbox/') || path.includes('..')) {
+        await answerCallbackQuery({ token: env.TELEGRAM_BOT_TOKEN, callbackQueryId: cq.id, text: 'Недопустимый путь' });
+        return c.json({ ok: true });
+      }
       const sha = await getFileSha({ token: env.GITHUB_TOKEN, repo: env.GITHUB_REPO, path });
       if (sha) {
         await deleteFile({ token: env.GITHUB_TOKEN, repo: env.GITHUB_REPO, path, sha, message: `remove: ${path}` });
@@ -156,7 +161,7 @@ app.post('/webhook', async (c) => {
     try {
       await dispatchVoiceEvent({
         token: env.GITHUB_TOKEN,
-        repo: env.GITHUB_REPO,
+        repo: env.GITHUB_BOT_REPO,
         voiceFileId: msg.voice.file_id,
         chatId,
         messageId: msg.message_id,

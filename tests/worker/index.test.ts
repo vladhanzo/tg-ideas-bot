@@ -24,6 +24,7 @@ const ENV = {
   OWNER_TELEGRAM_ID: '123456',
   GITHUB_TOKEN: 'ghtoken',
   GITHUB_REPO: 'owner/vault',
+  GITHUB_BOT_REPO: 'owner/bot',
 };
 
 function makeWebhookRequest(body: object, secret = 'testsecret') {

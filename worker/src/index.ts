@@ -116,30 +116,36 @@ app.post('/webhook', async (c) => {
 
   // Text message
   if (msg.text) {
-    const ts = moscowIso(msg.date);
-    const basePath = buildFilename(msg.text, new Date(msg.date * 1000));
-    const path = await uniquePath(basePath, env.GITHUB_TOKEN, env.GITHUB_REPO);
-    const content = buildNote({ text: msg.text, type: 'text', messageId: msg.message_id, createdAt: ts });
-    const slug = toSlug(msg.text);
-    const { html_url } = await createFile({
-      token: env.GITHUB_TOKEN,
-      repo: env.GITHUB_REPO,
-      path,
-      content,
-      message: `idea: ${slug}`,
-    });
-    await sendMessage({
-      token,
-      chatId,
-      text: `✅ Сохранено: \`${path.split('/').pop()}\``,
-      parseMode: 'Markdown',
-      inlineKeyboard: [
-        [
-          { text: '🔗 GitHub', url: html_url },
-          { text: '❌ Удалить', callback_data: `delete:${path}` },
+    try {
+      const ts = moscowIso(msg.date);
+      const basePath = buildFilename(msg.text, new Date(msg.date * 1000));
+      const path = await uniquePath(basePath, env.GITHUB_TOKEN, env.GITHUB_REPO);
+      const content = buildNote({ text: msg.text, type: 'text', messageId: msg.message_id, createdAt: ts });
+      const slug = toSlug(msg.text);
+      const { html_url } = await createFile({
+        token: env.GITHUB_TOKEN,
+        repo: env.GITHUB_REPO,
+        path,
+        content,
+        message: `idea: ${slug}`,
+      });
+      await sendMessage({
+        token,
+        chatId,
+        text: `✅ Сохранено: \`${path.split('/').pop()}\``,
+        parseMode: 'Markdown',
+        inlineKeyboard: [
+          [
+            { text: '🔗 GitHub', url: html_url },
+            { text: '❌ Удалить', callback_data: `delete:${path}` },
+          ],
         ],
-      ],
-    });
+      });
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : String(err);
+      await sendMessage({ token, chatId, text: `⚠️ Ошибка сохранения: ${reason}` });
+      return c.text('Internal Server Error', 500);
+    }
     return c.json({ ok: true });
   }
 
@@ -147,14 +153,20 @@ app.post('/webhook', async (c) => {
   if (msg.voice) {
     await sendChatAction({ token, chatId, action: 'typing' });
     await sendMessage({ token, chatId, text: '🎙️ Распознаю…' });
-    await dispatchVoiceEvent({
-      token: env.GITHUB_TOKEN,
-      repo: env.GITHUB_REPO,
-      voiceFileId: msg.voice.file_id,
-      chatId,
-      messageId: msg.message_id,
-      userTimestamp: moscowIso(msg.date),
-    });
+    try {
+      await dispatchVoiceEvent({
+        token: env.GITHUB_TOKEN,
+        repo: env.GITHUB_REPO,
+        voiceFileId: msg.voice.file_id,
+        chatId,
+        messageId: msg.message_id,
+        userTimestamp: moscowIso(msg.date),
+      });
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : String(err);
+      await sendMessage({ token, chatId, text: `⚠️ Не удалось запустить транскрипцию: ${reason}` });
+      return c.text('Internal Server Error', 500);
+    }
     return c.json({ ok: true });
   }
 

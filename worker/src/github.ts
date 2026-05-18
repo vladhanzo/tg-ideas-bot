@@ -100,12 +100,12 @@ export async function dispatchVoiceEvent(args: DispatchVoiceArgs): Promise<void>
   if (!res.ok) throw new Error(`GitHub dispatch error: ${res.status}`);
 }
 
-export async function listInboxFiles(args: {
+export async function listRawFiles(args: {
   token: string;
   repo: string;
   count: number;
 }): Promise<Array<{ name: string; path: string; html_url: string }>> {
-  const res = await fetch(`https://api.github.com/repos/${args.repo}/contents/Inbox`, {
+  const res = await fetch(`https://api.github.com/repos/${args.repo}/contents/raw`, {
     headers: githubHeaders(args.token),
   });
   if (!res.ok) return [];

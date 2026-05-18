@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { isAuthorizedRequest, isOwner } from './auth';
 import { buildFilename, toSlug } from './slug';
 import { buildNote } from './markdown';
-import { createFile, fileExists, getFileSha, deleteFile, dispatchVoiceEvent, getRecentCommits, listInboxFiles } from './github';
+import { createFile, fileExists, getFileSha, deleteFile, dispatchVoiceEvent, getRecentCommits, listRawFiles } from './github';
 import { sendMessage, sendChatAction, answerCallbackQuery } from './telegram';
 
 export interface Env {
@@ -80,7 +80,7 @@ app.post('/webhook', async (c) => {
     }
     if (cq.data?.startsWith('delete:')) {
       const path = cq.data.slice('delete:'.length);
-      if (!path.startsWith('Inbox/') || path.includes('..')) {
+      if (!path.startsWith('raw/') || path.includes('..')) {
         await answerCallbackQuery({ token: env.TELEGRAM_BOT_TOKEN, callbackQueryId: cq.id, text: 'Недопустимый путь' });
         return c.json({ ok: true });
       }
@@ -114,9 +114,9 @@ app.post('/webhook', async (c) => {
 
   // /list
   if (msg.text === '/list') {
-    const files = await listInboxFiles({ token: env.GITHUB_TOKEN, repo: env.GITHUB_REPO, count: 5 });
+    const files = await listRawFiles({ token: env.GITHUB_TOKEN, repo: env.GITHUB_REPO, count: 5 });
     if (files.length === 0) {
-      await sendMessage({ token, chatId, text: '📭 Inbox пуст' });
+      await sendMessage({ token, chatId, text: '📭 Нет идей' });
     } else {
       await sendMessage({
         token,
@@ -134,7 +134,7 @@ app.post('/webhook', async (c) => {
   // /status
   if (msg.text === '/status') {
     const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-    const count = await getRecentCommits({ token: env.GITHUB_TOKEN, repo: env.GITHUB_REPO, path: 'Inbox/', since });
+    const count = await getRecentCommits({ token: env.GITHUB_TOKEN, repo: env.GITHUB_REPO, path: 'raw/', since });
     await sendMessage({ token, chatId, text: `📊 Идей за 30 дней: ${count}` });
     return c.json({ ok: true });
   }

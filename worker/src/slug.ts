@@ -30,5 +30,5 @@ export function buildFilename(text: string, date: Date): string {
   const HH = pad(moscow.getUTCHours());
   const MM = pad(moscow.getUTCMinutes());
   const slug = toSlug(text);
-  return `Inbox/${yyyy}-${mm}-${dd}_${HH}${MM}_${slug}.md`;
+  return `raw/${yyyy}-${mm}-${dd}_${HH}${MM}_${slug}.md`;
 }

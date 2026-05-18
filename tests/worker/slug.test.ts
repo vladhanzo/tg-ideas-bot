@@ -34,7 +34,7 @@ describe('buildFilename', () => {
   it('builds path with correct structure', () => {
     const date = new Date('2026-05-17T11:32:00Z');
     const result = buildFilename('Test idea', date);
-    expect(result).toMatch(/^Inbox\/\d{4}-\d{2}-\d{2}_\d{4}_[\w-]+\.md$/);
+    expect(result).toMatch(/^raw\/\d{4}-\d{2}-\d{2}_\d{4}_[\w-]+\.md$/);
     expect(result).toContain('test-idea');
     expect(result).toContain('2026-05-17');
   });

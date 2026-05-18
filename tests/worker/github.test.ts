@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createFile, fileExists, getFileSha, deleteFile, dispatchVoiceEvent, getRecentCommits, listInboxFiles } from '../../worker/src/github';
+import { createFile, fileExists, getFileSha, deleteFile, dispatchVoiceEvent, getRecentCommits, listRawFiles } from '../../worker/src/github';
 
 const mockFetch = vi.fn();
 vi.stubGlobal('fetch', mockFetch);
@@ -87,7 +87,7 @@ describe('dispatchVoiceEvent', () => {
   });
 });
 
-describe('listInboxFiles', () => {
+describe('listRawFiles', () => {
   it('returns files sorted newest first, filtered to .md', async () => {
     mockFetch.mockResolvedValue({
       ok: true,
@@ -97,7 +97,7 @@ describe('listInboxFiles', () => {
         { name: '2026-05-17_0900_idea-a.md', path: 'Inbox/2026-05-17_0900_idea-a.md', html_url: 'https://gh/a', type: 'file' },
       ],
     });
-    const result = await listInboxFiles({ token: 'tok', repo: 'owner/repo', count: 5 });
+    const result = await listRawFiles({ token: 'tok', repo: 'owner/repo', count: 5 });
     expect(result).toHaveLength(2);
     expect(result[0].name).toBe('2026-05-18_0100_idea-b.md');
     expect(result[1].name).toBe('2026-05-17_0900_idea-a.md');
@@ -105,7 +105,7 @@ describe('listInboxFiles', () => {
 
   it('returns empty array on API error', async () => {
     mockFetch.mockResolvedValue({ ok: false, status: 500 });
-    expect(await listInboxFiles({ token: 'tok', repo: 'owner/repo', count: 5 })).toEqual([]);
+    expect(await listRawFiles({ token: 'tok', repo: 'owner/repo', count: 5 })).toEqual([]);
   });
 });
 

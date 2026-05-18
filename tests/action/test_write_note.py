@@ -25,7 +25,7 @@ def test_slug_max_length():
 def test_build_filename_format():
     dt = datetime.datetime(2026, 5, 17, 14, 32, 10)
     path = build_filename("Test idea", dt)
-    assert path.startswith("Inbox/2026-05-17_1432_")
+    assert path.startswith("raw/2026-05-17_1432_")
     assert path.endswith(".md")
     assert "test-idea" in path
 
@@ -57,15 +57,15 @@ def test_build_note_voice_type():
 
 def test_find_unique_path_no_collision():
     with tempfile.TemporaryDirectory() as tmpdir:
-        os.makedirs(os.path.join(tmpdir, "Inbox"), exist_ok=True)
-        result = find_unique_path("Inbox/test.md", tmpdir)
-        assert result == "Inbox/test.md"
+        os.makedirs(os.path.join(tmpdir, "raw"), exist_ok=True)
+        result = find_unique_path("raw/test.md", tmpdir)
+        assert result == "raw/test.md"
 
 
 def test_find_unique_path_with_collision():
     with tempfile.TemporaryDirectory() as tmpdir:
-        os.makedirs(os.path.join(tmpdir, "Inbox"), exist_ok=True)
+        os.makedirs(os.path.join(tmpdir, "raw"), exist_ok=True)
         # Create existing file
-        open(os.path.join(tmpdir, "Inbox", "test.md"), "w").close()
-        result = find_unique_path("Inbox/test.md", tmpdir)
-        assert result == "Inbox/test_2.md"
+        open(os.path.join(tmpdir, "raw", "test.md"), "w").close()
+        result = find_unique_path("raw/test.md", tmpdir)
+        assert result == "raw/test_2.md"

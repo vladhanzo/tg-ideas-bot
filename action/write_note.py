@@ -12,7 +12,7 @@ def make_slug(text: str, max_length: int = 60) -> str:
 def build_filename(text: str, dt: datetime.datetime) -> str:
     timestamp = dt.strftime("%Y-%m-%d_%H%M")
     slug = make_slug(text)
-    return f"Inbox/{timestamp}_{slug}.md"
+    return f"raw/{timestamp}_{slug}.md"
 
 
 def build_note(text: str, note_type: str, message_id: int, created_at: str) -> str:

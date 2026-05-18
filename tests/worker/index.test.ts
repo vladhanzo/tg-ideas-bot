@@ -1,14 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('../../worker/src/github', () => ({
-  createFile: vi.fn().mockResolvedValue({ html_url: 'https://github.com/o/r/blob/main/Inbox/x.md', sha: 'abc' }),
+  createFile: vi.fn().mockResolvedValue({ html_url: 'https://github.com/o/r/blob/main/raw/x.md', sha: 'abc' }),
   fileExists: vi.fn().mockResolvedValue(false),
   getFileSha: vi.fn().mockResolvedValue('sha123'),
   deleteFile: vi.fn().mockResolvedValue(undefined),
   dispatchVoiceEvent: vi.fn().mockResolvedValue(undefined),
   getRecentCommits: vi.fn().mockResolvedValue(5),
-  listInboxFiles: vi.fn().mockResolvedValue([
-    { name: '2026-05-18_0019_ya-vlad.md', path: 'Inbox/2026-05-18_0019_ya-vlad.md', html_url: 'https://gh/1' },
+  listRawFiles: vi.fn().mockResolvedValue([
+    { name: '2026-05-18_0019_ya-vlad.md', path: 'raw/2026-05-18_0019_ya-vlad.md', html_url: 'https://gh/1' },
   ]),
 }));
 vi.mock('../../worker/src/telegram', () => ({
@@ -19,7 +19,7 @@ vi.mock('../../worker/src/telegram', () => ({
 
 import app from '../../worker/src/index';
 import { sendMessage } from '../../worker/src/telegram';
-import { createFile, dispatchVoiceEvent, deleteFile, getFileSha, listInboxFiles } from '../../worker/src/github';
+import { createFile, dispatchVoiceEvent, deleteFile, getFileSha, listRawFiles } from '../../worker/src/github';
 
 const ENV = {
   TELEGRAM_BOT_TOKEN: 'testtoken',
@@ -114,7 +114,7 @@ describe('POST /webhook', () => {
   it('handles /list command and shows inline keyboard', async () => {
     const listUpdate = { update_id: 5, message: { ...baseMsg, text: '/list' } };
     await app.fetch(makeWebhookRequest(listUpdate), ENV);
-    expect(listInboxFiles).toHaveBeenCalledOnce();
+    expect(listRawFiles).toHaveBeenCalledOnce();
     const callArgs = (sendMessage as ReturnType<typeof vi.fn>).mock.calls[0][0];
     expect(callArgs.inlineKeyboard).toBeDefined();
     expect(callArgs.inlineKeyboard[0][0].text).toContain('ya-vlad');
@@ -148,7 +148,7 @@ describe('POST /webhook', () => {
       callback_query: {
         id: 'cq1',
         from: { id: 123456 },
-        data: 'delete:Inbox/test.md',
+        data: 'delete:raw/test.md',
       },
     };
     await app.fetch(makeWebhookRequest(cbUpdate), ENV);
